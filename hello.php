@@ -116,4 +116,45 @@ add_filter("option_blogname", "changer");
 function header_changer() {
 	return 'testttt';
 }
+//Display the rating on a submitted comment.
+function ci_comment_rating_display_rating( $comment_text ) {
+
+  if ( $rating = get_comment_meta( get_comment_ID(), 'rating', true ) ) {
+    $stars = '<p class="stars">';
+    for ( $i = 1; $i <= 5 ; $i ++ ) {
+      if ( $i <= $rating ) {
+        $stars .= '<span class="dashicons dashicons-star-filled"></span>';
+      } else {
+        $stars .= '<span class="dashicons dashicons-star-empty"></span>';
+      }
+    }
+    $stars        .= '</p>';
+    $comment_text = $comment_text . $stars;
+
+    return $comment_text;
+  } else {
+    return $comment_text;
+  }
+}
+
+$args = array(
+	'post_id' => 1,   // Use post_id, not post_ID
+);
+$comments = get_comments($args);
+foreach ( $comments as $comment ) :
+	echo $comment->comment_content;
+endforeach;
+
+function add_custom_comment_field( $comment_id ) {
+//maybe use this to store and get_comment_meta to get and display ratings
+   add_comment_meta( $comment_id, 'my_custom_comment_field', 5 );
+   $ratings = get_comment_meta($comment_id, 'my_custom_comment_field', true);
+   foreach ($ratings as $rating) {
+	   echo $rating;
+   }
+}
+add_action( 'comment_post', 'add_custom_comment_field' );
+/* add_action("comment_post", "comment_rating"); */
+
 add_filter("single_cat_title", "header_changer");
+add_filter( 'comment_text', 'ci_comment_rating_display_rating' );
