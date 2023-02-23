@@ -13,28 +13,27 @@ Version: 1.0
 
 function star_rating() {
 ?>
-<html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="https://cdn.korzh.com/metroui/v4/css/metro-all.min.css">
+    </head>
     <body>
-    <div class="rate">
-        <div class="rate_name">
-            Rating
+        <div class="rate">
+            <div class="rate_name">
+                Rating
+            </div>
         </div>
-        <div class="current_post" id="post_id" data-post_id=<?php echo get_the_ID() ?>>
-        <div class="stars">
-            <input type="radio" id="star5" name="stars" value="5" />
-            <label for="star5" title="text" class="fas fa-star">5 stars</label>
-            <input type="radio" id="star4" name="stars" value="4" />
-            <label for="star4" title="text" class="fas fa-star">4 stars</label>
-            <input type="radio" id="star3" name="stars" value="3" />
-            <label for="star3" title="text" class="fas fa-star">3 stars</label>
-            <input type="radio" id="star2" name="stars" value="2" />
-            <label for="star2" title="text" class="fas fa-star">2 stars</label>
-            <input type="radio" id="star1" name="stars" value="1" />
-            <label for="star1" title="text" class="fas fa-star">1 star</label>
-        </div>
-    </div>
-    <br>
-    <br>
+        <div class="current_post" id="post_id" data-post_id=<?php echo get_the_ID() ?>></div>
+        <div class="current_comment" id="comment_id" data-comment_id=<?php echo get_comment_ID() ?>></div>
+        <input class="star_rating_field"
+            data-role="rating"
+            id="star_rating_field"
+            data-star-color="orange"
+            data-stared-color="orange"
+            data-on-star-click="wordpress_rating_plugin"
+            data-show-score="false"
+        >
+        <script src="https://cdn.korzh.com/metroui/v4/js/metro.min.js"></script>
     </body>
 </html>
 <?php
@@ -53,7 +52,8 @@ function add_meta_field($post) {
 function post_rating( $req ) {
     $rating = $req['rating'];
     $post_id = $req['post_id'];
-    $res = new WP_REST_Response($rating);
+    $comment_id = $req['comment_id'];
+    $res = new WP_REST_Response($comment_id);
     $res->set_status(200);
     add_post_meta($post_id, 'rating', $rating, true);
     return $res;
@@ -69,16 +69,14 @@ function show_rating_field($post) {
     $post_rating = get_post_meta($post_id, 'rating', true);
 ?>
 <html lang="en">
-    <head>
-        <link rel="stylesheet" href="https://cdn.korzh.com/metroui/v4/css/metro-all.min.css">
-    </head>
     <body>
-        <div data-role="rating"
-            data-value="<?php echo $post_rating ?>"
+        <input class="post_rating"
+            id="post_rating"
+            data-role="rating"
             data-stared-color="orange"
             data-static="true"
-        ></div>
-        <script src="https://cdn.korzh.com/metroui/v4/js/metro.min.js"></script>
+            data-value="<?php echo $post_rating?>"
+        >
     </body>
 </html>
 <?php
