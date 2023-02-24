@@ -11,42 +11,80 @@ Author: Emmanuel Podestá Junior
 Version: 1.0
 */
 
-function star_rating() {
-?>
-<html lang="en">
-    <head>
-        <link rel="stylesheet" href="https://cdn.korzh.com/metroui/v4/css/metro-all.min.css">
-    </head>
-    <body>
-        <div class="rate">
+function star_rating( $fields ) {
+    $commenter = wp_get_current_commenter();
+
+    //unset fields
+    $comment_field = $fields['comment'];
+    $author_field = $fields['author'];
+    $email_field = $fields['email'];
+    $url_field = $fields['url'];
+    $cookies_field = $fields['cookies'];
+    unset( $fields['comment'] );
+    unset( $fields['author'] );
+    unset( $fields['email'] );
+    unset( $fields['url'] );
+    unset( $fields['cookies'] );
+
+    // reorder fields pre new field
+    $fields['author'] = $author_field;
+    $fields['email'] = $email_field;
+    $fields['url'] = $url_field;
+    $fields['comment'] = $comment_field;
+
+    // add new field
+    $fields[ 'Rate this post' ] .=
+        '<link rel="stylesheet" href="https://cdn.korzh.com/metroui/v4/css/metro-all.min.css">'.
+        '<div class="rate">
             <div class="rate_name">
                 Rating
             </div>
-        </div>
-        <div class="current_post" id="post_id" data-post_id=<?php echo get_the_ID() ?>></div>
-        <div class="current_comment" id="comment_id" data-comment_id=<?php echo get_comment_ID() ?>></div>
+        </div>'.
+        '<div class="current_post" id="post_id" data-post_id=' . get_the_ID() . '></div>'.
+        '<div class="current_comment" id="comment_id" data-comment_id=' . get_comment_ID() . '></div>
         <input class="star_rating_field"
             data-role="rating"
             id="star_rating_field"
             data-star-color="orange"
             data-stared-color="orange"
-            data-on-star-click="wordpress_rating_plugin"
+            data-on-star-click="
+                <span class="comment_rating"><input type="radio" name="rating" id="rating" value=arguments[0]/>
+            "
             data-show-score="false"
         >
-        <script src="https://cdn.korzh.com/metroui/v4/js/metro.min.js"></script>
-    </body>
-</html>
-<?php
+        <script src="https://cdn.korzh.com/metroui/v4/js/metro.min.js"></script>';
+
+    // add remaining fields
+    $fields['cookies'] = $cookies_field;
+
+    return $fields;
+}
+
+// Add fields after default fields above the comment box, always visible
+
+add_action( 'comment_form_logged_in_after', 'additional_fields' );
+add_action( 'comment_form_after_fields', 'additional_fields' );
+
+function additional_fields () {
+  echo '<p class="comment-form-title">'.
+  '<label for="title">' . __( 'Comment Title' ) . '</label>'.
+  '<input id="title" name="title" type="text" size="30"  tabindex="5" /></p>';
+
+  echo '<p class="comment-form-rating">'.
+  '<label for="rating">'. __('Rating') . '<span class="required">*</span></label>
+  <span class="commentratingbox">';
+
+    //Current rating scale is 1 to 5. If you want the scale to be 1 to 10, then set the value of $i to 10.
+    for( $i=1; $i <= 5; $i++ )
+    echo '<span class="commentrating"><input type="radio" name="rating" id="rating" value="'. $i .'"/>'. $i .'</span>';
+
+  echo'</span></p>';
+
 }
 
 function add_meta_field($post) {
 	add_post_meta($post, 'rating', -1);
-	register_meta('post', 'rating', [
-		'type' => 'integer',
-		'description'  => 'Meta key associated with post rating.',
-		'single'       => true,
-		'show_in_rest' => true
-	]);
+	add_comment_meta($comment, 'rating', -1);
 }
 
 function post_rating( $req ) {
@@ -57,11 +95,6 @@ function post_rating( $req ) {
     $res->set_status(200);
     add_post_meta($post_id, 'rating', $rating, true);
     return $res;
-}
-
-function load_scripts() {
-    wp_enqueue_style('star_style', plugin_dir_url(__FILE__) . '/theme/style.css');
-    wp_enqueue_script( 'rating', plugin_dir_url(__FILE__) . '/rating.js', array('wp-api-fetch'), '1.0.0', true );
 }
 
 function show_rating_field($post) {
@@ -82,13 +115,6 @@ function show_rating_field($post) {
 <?php
 }
 
-add_action( 'rest_api_init', function () {
-  register_rest_route( 'rating/v1', '/post_rating', array(
-    'methods' => 'POST',
-    'callback' => 'post_rating',
-  ) );
-} );
-
-add_action('wp_enqueue_scripts', 'load_scripts');
-add_action('comment_form_before_fields', 'star_rating');
+add_filter( 'comment_form_fields', 'star_rating');
+add_action( 'comment_post', 'save_comment_meta_data' );
 add_action('the_post', 'show_rating_field');
