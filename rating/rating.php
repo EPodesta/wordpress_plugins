@@ -64,10 +64,10 @@ function save_comment_meta_data( $comment_id ) {
     add_comment_meta($comment_id, 'rating', $rating);
 }
 
-function insert_comment_rating($comment) {
+function insert_comment_rating($comment_text, $comment) {
     $comment_id = $comment->comment_ID;
     $comment_rating = get_comment_meta($comment_id,'rating',true);
-    $comment->comment_content .=
+    $comment_text .=
     '<br><input class="comment_rating"
         id="comment_rating"
         data-role="rating"
@@ -75,7 +75,7 @@ function insert_comment_rating($comment) {
         data-static="true"
         data-value="'.$comment_rating.'"'.
     '>';
-    return $comment;
+    return $comment_text;
 }
 
 function insert_post_rating($post_content) {
@@ -112,5 +112,5 @@ function load_scripts() {
 add_action('wp_enqueue_scripts', 'load_scripts');
 add_filter( 'comment_form_fields', 'star_rating');
 add_action( 'comment_post', 'save_comment_meta_data' );
-add_filter('get_comment', 'insert_comment_rating');
+add_filter('get_comment_text', 'insert_comment_rating', 10, 2);
 add_filter('the_content', 'insert_post_rating');
