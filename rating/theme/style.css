@@ -2,7 +2,7 @@
     margin: 0;
     padding: 0;
 }
-.rate {
+.stars {
     display: inline;
     padding: 0px 0px 0px 0px;
 }
@@ -14,7 +14,8 @@
 
 .stars:not(:checked) > input {
     position:absolute;
-    top:-9999px;
+    left:-9999px;
+    visibility:hidden;
 }
 .stars:not(:checked) > label {
     float:right;
@@ -41,4 +42,5 @@
 .stars > input:checked ~ label:hover ~ label,
 .stars > label:hover ~ input:checked ~ label {
     color: #c59b08;
+    visibility:hidden;
 }
